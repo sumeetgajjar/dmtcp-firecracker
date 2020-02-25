@@ -1,6 +1,7 @@
 ### VirtualEnv template
 # Virtualenv
 # http://iamzed.com/2009/05/07/a-primer-on-virtualenv/
+*.ext4
 
 data/mnist/cache/*
 .idea/*
