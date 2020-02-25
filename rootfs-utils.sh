@@ -32,7 +32,7 @@ function copy_files_to_rootfs() {
 function mount_custom_root_fs() {
 	if mountpoint -q ${ROOT_FS_HOST_PATH} ; then
 		echo "Unmounting: ${ROOT_FS_HOST_PATH}"
-		sudo umount ${ROOT_FS_HOST_PATH}		
+		sudo umount ${ROOT_FS_HOST_PATH}
 	fi
 	sudo mount ${ROOT_FS_RAW_FILE} ${ROOT_FS_HOST_PATH}
 }
