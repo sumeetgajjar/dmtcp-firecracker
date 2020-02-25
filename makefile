@@ -17,4 +17,4 @@ docker-shell:
 	sudo umount $(ROOT_FS_HOST_PATH)
 
 docker-create-rootfs:
-	docker run --rm --name dmtcp -v $(ROOT_FS_HOST_PATH):$(ROOT_FS_PATH) $(DOCKER_IMAGE) /firecracker/rootfs-utils.sh copy
+	docker run --rm --name dmtcp -v $(ROOT_FS_HOST_PATH):$(ROOT_FS_PATH) $(DOCKER_IMAGE) /firecracker/rootfs-utils.sh copy_files_to_rootfs

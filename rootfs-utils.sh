@@ -2,12 +2,6 @@
 
 set -e 
 
-function copy_files_to_rootfs() {
-	# copy the newly configured system to the rootfs image:
-	for dir in bin etc lib root sbin usr; do tar c "/$dir" | tar x -C ${ROOT_FS_PATH}; done
-	for dir in dev proc run sys var; do mkdir ${ROOT_FS_PATH}/${dir}; done
-}
-
 function allocate_rootfs() {
 	if [[ -f ${ROOT_FS_RAW_FILE} ]]; then
 		echo "Moving old rootfs"
@@ -19,12 +13,21 @@ function allocate_rootfs() {
 	mkfs.ext4 ${ROOT_FS_RAW_FILE}
 }
 
-function mount_custom_rootfs() {
-	sudo mount ${ROOT_FS_RAW_FILE} ${ROOT_FS_HOST_PATH}
+function copy_files_to_rootfs() {
+	# copy the newly configured system to the rootfs image:
+	for dir in bin etc lib root sbin usr; do tar c "/$dir" | tar x -C ${ROOT_FS_PATH}; done
+	for dir in dev proc run sys var; do mkdir ${ROOT_FS_PATH}/${dir}; done
+
+	# copy dmtcp
+	cp -r /firecracker/dmtcp ${ROOT_FS_PATH}/
 }
 
 function create-rootfs () {
 	allocate_rootfs
+	sudo mount ${ROOT_FS_RAW_FILE} ${ROOT_FS_HOST_PATH}
+	make docker-build
+	make docker-create-rootfs
+	sudo umount ${ROOT_FS_HOST_PATH}
 }
 
 while [[ $# -ne 0 ]];
