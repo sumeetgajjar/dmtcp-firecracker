@@ -2,11 +2,18 @@
 
 set -e 
 
+if [[ ! -z ${ENV_VARS} ]]; then
+	for VAR in ${ENV_VARS}; do 
+		export $VAR
+	done
+fi
+
+
 function allocate_rootfs() {
 	if [[ -f ${ROOT_FS_RAW_FILE} ]]; then
-		echo "Moving old rootfs"
-		NEW_FILE_NAME="$(date | sed 's/\s/-/g')-${ROOT_FS_RAW_FILE}"
-		mv ${ROOT_FS_RAW_FILE} ${NEW_FILE_NAME}
+		NEW_ROOT_FS_RAW_FILE="$(date | sed 's/\s/-/g')-${ROOT_FS_RAW_FILE}"
+		echo "Renaming old rootfs: ${NEW_ROOT_FS_RAW_FILE}"
+		mv ${ROOT_FS_RAW_FILE} ${NEW_ROOT_FS_RAW_FILE}
 	fi
 
 	dd if=/dev/zero of=${ROOT_FS_RAW_FILE} bs=20M count=50
@@ -22,20 +29,34 @@ function copy_files_to_rootfs() {
 	cp -r /firecracker/dmtcp ${ROOT_FS_PATH}/
 }
 
-function create-rootfs () {
-	allocate_rootfs
+function mount_custom_root_fs() {
+	if mountpoint -q ${ROOT_FS_HOST_PATH} ; then
+		echo "Unmounting: ${ROOT_FS_HOST_PATH}"
+		sudo umount ${ROOT_FS_HOST_PATH}		
+	fi
 	sudo mount ${ROOT_FS_RAW_FILE} ${ROOT_FS_HOST_PATH}
+}
+
+function unmount_custom_root_fs() {
+	sudo umount ${ROOT_FS_HOST_PATH}
+}
+
+function create_rootfs () {
+	mount_custom_root_fs
 	make docker-build
 	make docker-create-rootfs
-	sudo umount ${ROOT_FS_HOST_PATH}
+	unmount_custom_root_fs
 }
 
 while [[ $# -ne 0 ]];
 do
    case $1 in
-        copy) copy_files_to_rootfs ;;
-		create-rootfs) create-rootfs ;;
-           *) echo "Invalid option: $1, correct usage is: rootfs-utils.sh [copy]";;
+		create-rootfs) create_rootfs ;;
+		copy-files-to-rootfs) copy_files_to_rootfs ;;
+		allocate-rootfs) allocate_rootfs ;;
+		mount) mount_custom_root_fs ;;
+		unmount) unmount_custom_root_fs ;;
+           *) echo "Invalid option: $1, correct usage is: rootfs-utils.sh [create-rootfs|copy-files-to-rootfs|allocate-rootfs|mount|unmount]";;
    esac
    shift
 done
